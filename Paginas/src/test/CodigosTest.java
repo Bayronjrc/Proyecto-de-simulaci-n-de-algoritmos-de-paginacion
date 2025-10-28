@@ -1,6 +1,6 @@
-package controladores;
+package test;
 
-import modelos.Pagina;
+import test.PaginationTestModel;
 import java.util.ArrayList;
 import java.util.Arrays;
 /*
@@ -14,14 +14,14 @@ import java.util.Arrays;
  */
 public class CodigosTest {
    
-    private ArrayList<Pagina> requestQueue;
+    private ArrayList<PaginationTestModel> requestQueue;
     private int failAmount;
     private int amountOfPagesInMarco = 0;
-    private Pagina[] marco;
-    private Pagina[] blackList;
+    private PaginationTestModel[] marco;
+    private PaginationTestModel[] blackList;
 
-    private Boolean isInMarcoAlredy(Pagina paginaNueva){
-        for(Pagina paginaVieja : this.marco){
+    private Boolean isInMarcoAlredy(PaginationTestModel paginaNueva){
+        for(PaginationTestModel paginaVieja : this.marco){
             if(paginaVieja != null){
                 int codigoViejo = paginaVieja.getCodigo();
                 int codigoNuevo = paginaNueva.getCodigo();
@@ -34,18 +34,18 @@ public class CodigosTest {
         return false;
     }
     
-    private int ArraySize(Pagina[] array){
+    private int ArraySize(PaginationTestModel[] array){
        int count=0;
-       for(Pagina pagina : array){
+       for(PaginationTestModel pagina : array){
            if (pagina != null)
                 count++;
        }
        return count;
     }
     
-    private Boolean isInBlackList(Pagina paginaNueva){
+    private Boolean isInBlackList(PaginationTestModel paginaNueva){
         //System.out.println("Lista negra: " + Arrays.toString(blackList));
-        for(Pagina paginaVieja : blackList){
+        for(PaginationTestModel paginaVieja : blackList){
             if ( paginaVieja == null )continue;//???
             
             int codigoViejo = paginaVieja.getCodigo();
@@ -60,7 +60,7 @@ public class CodigosTest {
     }
     
     
-    private int getIndexOfPaginaInArray(Pagina pagina, Pagina[] marco, int Size){
+    private int getIndexOfPaginaInArray(PaginationTestModel pagina, PaginationTestModel[] marco, int Size){
         for(int i = 0; i < Size; i++){
             if(marco[i] !=null)
                 if(pagina.getCodigo() == marco[i].getCodigo()){
@@ -70,7 +70,7 @@ public class CodigosTest {
         return -1;
     }
     
-    private Pagina[] KILL(Pagina pagina, Pagina[] marco, int Size) {
+    private PaginationTestModel[] KILL(PaginationTestModel pagina, PaginationTestModel[] marco, int Size) {
         if(pagina == null)
             return marco;
         
@@ -84,7 +84,7 @@ public class CodigosTest {
         }
 
         marco[index] = null;
-        Pagina[] newMarco = new Pagina[Size];
+        PaginationTestModel[] newMarco = new PaginationTestModel[Size];
         for(int i = 0, j=0; i < Size; i++){
             if(marco[i]!=null){
                 newMarco[j]=marco[i];
@@ -105,12 +105,12 @@ public class CodigosTest {
     public void Test(int amountOfPages, int frameSize, boolean printSteps){
         //--- Paso 0, declarar las Estructuras de datos ---
         
-        requestQueue = new ArrayList<Pagina>();
-        marco = new Pagina[frameSize];
+        requestQueue = new ArrayList<PaginationTestModel>();
+        marco = new PaginationTestModel[frameSize];
         
         // --- Paso 1, Llenar la lista con codigos de ejemplo. ---
         for(int i = 0; i < amountOfPages; i++){
-            Pagina pagina = new Pagina();
+            PaginationTestModel pagina = new PaginationTestModel();
             requestQueue.add(pagina);
         }
         // Marco = [1,2,3,54]
@@ -128,7 +128,7 @@ public class CodigosTest {
                 System.out.println(requestQueue);
             }
             
-            Pagina pagina = requestQueue.remove(0);
+            PaginationTestModel pagina = requestQueue.remove(0);
             if(ArraySize(marco) == frameSize)//El marco está lleno, aquí va el óptimo
             {
                 //System.out.println(" --- REEEMPLAZO VA A A OCURRIR!!!---");
@@ -136,11 +136,11 @@ public class CodigosTest {
                 if(isInMarcoAlredy(pagina));
                 else{
                     //--- Copiar un arraylist con otro ---
-                    blackList = new Pagina[frameSize];
+                    blackList = new PaginationTestModel[frameSize];
                     System.arraycopy(marco, 0, blackList, 0, frameSize);
 
                     // --- ¿Cual es el ultimo que aparece?---
-                    for(Pagina paginaDelResto : requestQueue){
+                    for(PaginationTestModel paginaDelResto : requestQueue){
                         if (isInBlackList(paginaDelResto)){
                             //Quitar esa página del arreglo blacklist
                             blackList = KILL(paginaDelResto,blackList,frameSize);
@@ -155,7 +155,7 @@ public class CodigosTest {
                     if(ArraySize(blackList) > 0){
                         //Eliminar todas las páginas que siguen en el blacklist
                         //Del marco.
-                        for(Pagina muerto : blackList){
+                        for(PaginationTestModel muerto : blackList){
                             
                             KILL(muerto, marco, frameSize);
                         }
@@ -163,7 +163,7 @@ public class CodigosTest {
                     
                     //Ahora introducir el nuevo elemento
                     int index = ArraySize(marco);
-                    Pagina nuevaPagina = new Pagina(pagina);
+                    PaginationTestModel nuevaPagina = new PaginationTestModel(pagina);
                     marco[index] = nuevaPagina;
                     //Aumentó la cantidad de fallos por 1.
                     failAmount++;
@@ -174,7 +174,7 @@ public class CodigosTest {
             else if (!isInMarcoAlredy(pagina))//Meter en el marco la pagina
             {   
                 int index = ArraySize(marco);
-                Pagina nuevaPagina = new Pagina(pagina);
+                PaginationTestModel nuevaPagina = new PaginationTestModel(pagina);
                 marco[index] = nuevaPagina;
                 //requestQueue.remove(0);
                 
