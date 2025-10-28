@@ -13,7 +13,8 @@ public class Page {
     private int indexOfPage;
     private boolean isInVirtualMemory;
     private int extraValue;
-    
+    /** Stores the amount of bytes unused in this page. could be useful later.*/
+    private int fragmentationInBytes;
     
     /**
      * This is the constructor to set a page directly
@@ -27,6 +28,7 @@ public class Page {
         this.extraValue = extraValue;
         this.indexOfPage = indexOfPage;
         this.isInVirtualMemory = isInVirtualMemory;
+        this.fragmentationInBytes = 0;
     }
 
     /**
@@ -42,7 +44,7 @@ public class Page {
     public int getIndexOfPage() {
         return indexOfPage;
     }
-
+    
     /**
      * @return the isInVirtualMemory
      */
@@ -83,6 +85,22 @@ public class Page {
      */
     public void setExtraValue(int extraValue) {
         this.extraValue = extraValue;
+    }
+    
+    
+    
+    /**
+     * @return the fragmentationInBytes
+     */
+    public int getFragmentationInBytes() {
+        return fragmentationInBytes;
+    }
+    
+    /**
+     * @param fragmentationInBytes the fragmentationInBytes to set
+     */
+    public void setFragmentationInBytes(int fragmentationInBytes) {
+        this.fragmentationInBytes = fragmentationInBytes;
     }
     
 }
