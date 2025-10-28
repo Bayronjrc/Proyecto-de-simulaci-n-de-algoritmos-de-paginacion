@@ -2,13 +2,13 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package modelos;
+package test;
 import java.util.Random;
 /**
  *
  * @author wesleyesquivel
  */
-public class Pagina {
+public class PaginationTestModel {
 
      private int codigo;
      private String pid;
@@ -20,14 +20,14 @@ public class Pagina {
          return rand.nextInt(limit);
      }
      
-     public Pagina (){
+     public PaginationTestModel (){
         long seedNano = System.nanoTime();
         this.codigo = getRandomPositiveNumber(50);
         this.pid = "Test " + codigo;
         this.mark = "this could be used later";
      }
      
-    public Pagina (Pagina copy){
+    public PaginationTestModel (PaginationTestModel copy){
         this.codigo = copy.codigo;
         this.pid = copy.pid;
         this.mark = copy.mark;
