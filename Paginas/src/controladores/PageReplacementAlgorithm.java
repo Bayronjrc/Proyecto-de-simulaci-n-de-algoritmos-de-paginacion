@@ -8,7 +8,7 @@ import java.util.List;
  * Define el contrato que deben cumplir OPT, FIFO, LRU, MRU, RND.
  */
 
-public interface AlgoritmoPaginacion {
+public interface PageReplacementAlgorithm {
     /**
      * Selecciona la página victima a reemplazar cuando la RAM está llena.
      * 
