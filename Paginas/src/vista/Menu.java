@@ -10,7 +10,7 @@ import controladores.SC;
 
 import java.io.File;
 import javax.swing.JFileChooser;
-import javax.swing.SpinnerListModel;
+import javax.swing.SpinnerNumberModel; 
 
 // --- Imports de Swing para UI ---
 import java.awt.BorderLayout;
@@ -21,33 +21,30 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.event.ActionEvent;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
+import javax.swing.JSlider;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.UIManager;
-import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 
 /**
- *
- * @author wess (Revisado y mejorado por IA)
+ * Clase que configura la simulación.
+ * Se han aplicado todas las mejoras: límites ampliados, slider de velocidad y botón plano.
  */
 public class Menu extends javax.swing.JFrame {
 
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(Menu.class.getName());
 
     // --- Variables de UI ---
-    // No es necesario que sean 'private', pero las mantenemos como en el original
     JButton btnBuscarArchivo;
     ButtonGroup btnGroupFuente;
     JButton btnIniciarSimulacion;
@@ -65,23 +62,26 @@ public class Menu extends javax.swing.JFrame {
     JSpinner spinnerProcesos;
     JTextField txtRutaArchivo;
     JTextField txtSemilla;
+    
+    JLabel lblVelocidad;
+    JSlider sliderVelocidad;
 
     // --- Fuentes y Colores Personalizados ---
     private final Font FONT_LABEL = new Font("SansSerif", Font.PLAIN, 14);
     private final Font FONT_TITLE = new Font("SansSerif", Font.BOLD, 16);
     private final Font FONT_BUTTON_BIG = new Font("SansSerif", Font.BOLD, 16);
-    private final Color COLOR_FONDO = new Color(245, 245, 245); // Un gris muy claro
-    private final Color COLOR_PANEL = new Color(255, 255, 255); // Blanco
-    private final Color COLOR_BOTON_PRIMARIO = new Color(0, 120, 215); // Azul
+    private final Color COLOR_FONDO = new Color(245, 245, 245); 
+    private final Color COLOR_PANEL = new Color(255, 255, 255); 
+    private final Color COLOR_BOTON_PRIMARIO = new Color(0, 120, 215); 
     private final Color COLOR_TEXTO_BOTON = Color.WHITE;
-    private final Insets INSETS_CAMPO = new Insets(5, 5, 5, 5); // Espaciado para GridBag
+    private final Insets INSETS_CAMPO = new Insets(5, 5, 5, 5); 
 
     /**
      * Creates new form Menu
      */
     public Menu() {
         // 1. Configuración básica de la ventana
-        super("Simulador de Paginación - Configuración");
+        super("Simulador de Paginaci\u00f3n - Configuraci\u00f3n");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         
         // 2. Inicializar y construir la UI
@@ -96,27 +96,25 @@ public class Menu extends javax.swing.JFrame {
      */
     private void initUIComponents() {
         // --- Panel Principal ---
-        // Usamos un JPanel como contentPane para poder ponerle un borde (padding)
         JPanel contentPane = new JPanel(new BorderLayout(10, 10));
-        contentPane.setBorder(new EmptyBorder(15, 15, 15, 15)); // Padding general
+        contentPane.setBorder(new EmptyBorder(15, 15, 15, 15)); 
         contentPane.setBackground(COLOR_FONDO);
         setContentPane(contentPane);
 
         // --- Panel Central (para los dos paneles de configuración) ---
-        JPanel panelCentral = new JPanel(new BorderLayout(0, 10)); // Espacio vertical de 10px
-        panelCentral.setOpaque(false); // Transparente, usa el fondo del contentPane
+        JPanel panelCentral = new JPanel(new BorderLayout(0, 10)); 
+        panelCentral.setOpaque(false); 
 
         // --- 1. Construcción del Panel de Fuente ---
         panelFuente = new JPanel(new GridBagLayout());
         panelFuente.setBackground(COLOR_PANEL);
-        // Borde con título y padding interno
         TitledBorder tbFuente = BorderFactory.createTitledBorder("Fuente de Instrucciones");
         tbFuente.setTitleFont(FONT_TITLE);
         panelFuente.setBorder(BorderFactory.createCompoundBorder(tbFuente, new EmptyBorder(10, 10, 10, 10)));
         
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = INSETS_CAMPO; // Espaciado
+        gbc.insets = INSETS_CAMPO; 
 
         // Fila 0: Radio Cargar Archivo
         radioCargarArchivo = new JRadioButton("Cargar desde Archivo");
@@ -124,7 +122,7 @@ public class Menu extends javax.swing.JFrame {
         radioCargarArchivo.setOpaque(false);
         gbc.gridx = 0;
         gbc.gridy = 0;
-        gbc.gridwidth = 3; // Ocupa 3 columnas
+        gbc.gridwidth = 3; 
         panelFuente.add(radioCargarArchivo, gbc);
 
         // Fila 1: Componentes de Archivo
@@ -132,37 +130,37 @@ public class Menu extends javax.swing.JFrame {
         lblRutaArchivo.setFont(FONT_LABEL);
         gbc.gridx = 0;
         gbc.gridy = 1;
-        gbc.gridwidth = 1; // Resetea
-        gbc.weightx = 0; // Etiqueta no se estira
+        gbc.gridwidth = 1; 
+        gbc.weightx = 0; 
         panelFuente.add(lblRutaArchivo, gbc);
 
         txtRutaArchivo = new JTextField();
         txtRutaArchivo.setFont(FONT_LABEL);
         txtRutaArchivo.setEditable(false);
-        txtRutaArchivo.setColumns(20); // Tamaño sugerido
+        txtRutaArchivo.setColumns(20); 
         gbc.gridx = 1;
         gbc.gridy = 1;
-        gbc.weightx = 1.0; // Campo de texto se estira
+        gbc.weightx = 1.0; 
         panelFuente.add(txtRutaArchivo, gbc);
 
         btnBuscarArchivo = new JButton("Buscar...");
         btnBuscarArchivo.setFont(FONT_LABEL);
         gbc.gridx = 2;
         gbc.gridy = 1;
-        gbc.weightx = 0; // Botón no se estira
+        gbc.weightx = 0; 
         panelFuente.add(btnBuscarArchivo, gbc);
 
         // Fila 2: Radio Generar Nuevo
-        radioGenerarNuevo = new JRadioButton("Generar Nueva Simulación");
+        radioGenerarNuevo = new JRadioButton("Generar Nueva Simulaci\u00f3n");
         radioGenerarNuevo.setFont(FONT_LABEL);
         radioGenerarNuevo.setOpaque(false);
         gbc.gridx = 0;
         gbc.gridy = 2;
         gbc.gridwidth = 3;
-        gbc.insets = new Insets(15, 5, 5, 5); // Más espacio arriba
+        gbc.insets = new Insets(15, 5, 5, 5); 
         panelFuente.add(radioGenerarNuevo, gbc);
 
-        gbc.insets = INSETS_CAMPO; // Resetea insets
+        gbc.insets = INSETS_CAMPO; 
 
         // Fila 3: Generar Procesos
         lblProcesos = new JLabel("Procesos (P):");
@@ -175,7 +173,6 @@ public class Menu extends javax.swing.JFrame {
 
         spinnerProcesos = new JSpinner();
         spinnerProcesos.setFont(FONT_LABEL);
-        // Hacemos el spinner más alto
         spinnerProcesos.setPreferredSize(new Dimension(100, 30));
         gbc.gridx = 1;
         gbc.gridy = 3;
@@ -209,11 +206,11 @@ public class Menu extends javax.swing.JFrame {
         // --- 2. Construcción del Panel de Parámetros ---
         panelParametros = new JPanel(new GridBagLayout());
         panelParametros.setBackground(COLOR_PANEL);
-        TitledBorder tbParams = BorderFactory.createTitledBorder("Parámetros de Simulación");
+        TitledBorder tbParams = BorderFactory.createTitledBorder("Par\u00e1metros de Simulaci\u00f3n");
         tbParams.setTitleFont(FONT_TITLE);
         panelParametros.setBorder(BorderFactory.createCompoundBorder(tbParams, new EmptyBorder(10, 10, 10, 10)));
         
-        gbc = new GridBagConstraints(); // Reiniciamos gbc por si acaso
+        gbc = new GridBagConstraints(); 
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = INSETS_CAMPO;
 
@@ -227,14 +224,14 @@ public class Menu extends javax.swing.JFrame {
         
         comboAlgoritmo = new JComboBox<>(new String[] { "FIFO", "SC", "MRU", "RND" });
         comboAlgoritmo.setFont(FONT_LABEL);
-        comboAlgoritmo.setPreferredSize(new Dimension(100, 30)); // Más alto
+        comboAlgoritmo.setPreferredSize(new Dimension(100, 30)); 
         gbc.gridx = 1;
         gbc.gridy = 0;
         gbc.weightx = 1.0;
         panelParametros.add(comboAlgoritmo, gbc);
 
         // Fila 1: Semilla
-        lblSemilla = new JLabel("Semilla (para RND y Generación):");
+        lblSemilla = new JLabel("Semilla (para RND y Generaci\u00f3n):");
         lblSemilla.setFont(FONT_LABEL);
         gbc.gridx = 0;
         gbc.gridy = 1;
@@ -243,25 +240,55 @@ public class Menu extends javax.swing.JFrame {
 
         txtSemilla = new JTextField("123456");
         txtSemilla.setFont(FONT_LABEL);
-        txtSemilla.setPreferredSize(new Dimension(100, 30)); // Más alto
+        txtSemilla.setPreferredSize(new Dimension(100, 30)); 
         txtSemilla.setColumns(15);
         gbc.gridx = 1;
         gbc.gridy = 1;
         gbc.weightx = 1.0;
         panelParametros.add(txtSemilla, gbc);
         
+        // Fila 2: SLIDER DE VELOCIDAD
+        lblVelocidad = new JLabel("Velocidad Inicial (ms):");
+        lblVelocidad.setFont(FONT_LABEL);
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.weightx = 0;
+        panelParametros.add(lblVelocidad, gbc);
+
+        sliderVelocidad = new JSlider();
+        sliderVelocidad.setMajorTickSpacing(250);
+        sliderVelocidad.setMaximum(2000);
+        sliderVelocidad.setMinimum(6); // Permite 12ms
+        sliderVelocidad.setMinorTickSpacing(13); 
+        sliderVelocidad.setPaintTicks(true);
+        sliderVelocidad.setToolTipText("Tiempo en ms por paso (12ms - 2000ms)");
+        sliderVelocidad.setValue(200);
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        gbc.weightx = 1.0;
+        panelParametros.add(sliderVelocidad, gbc);
+
+        
         // --- 3. Construcción del Panel de Botón Inferior ---
         JPanel panelBotonSur = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        panelBotonSur.setOpaque(false); // Transparente
+        panelBotonSur.setOpaque(false); 
 
-        btnIniciarSimulacion = new JButton("Iniciar Simulación");
+        btnIniciarSimulacion = new JButton("Iniciar Simulaci\u00f3n");
         btnIniciarSimulacion.setFont(FONT_BUTTON_BIG);
         btnIniciarSimulacion.setBackground(COLOR_BOTON_PRIMARIO);
         btnIniciarSimulacion.setForeground(COLOR_TEXTO_BOTON);
-        btnIniciarSimulacion.setOpaque(true); // Necesario en algunos LaF para que se vea el fondo
-        btnIniciarSimulacion.setBorderPainted(false); // Aspecto más plano
-        btnIniciarSimulacion.setFocusPainted(false);
-        // Padding interno del botón
+        btnIniciarSimulacion.setOpaque(true); 
+        
+        // --- CÓDIGO CLAVE PARA ELIMINAR EFECTOS DE HOVER/FOCUS ---
+        btnIniciarSimulacion.setBorderPainted(false); // Elimina el borde de 3D
+        btnIniciarSimulacion.setFocusPainted(false); // Elimina el borde de enfoque (focus)
+        
+        // Esto es esencial en muchos LaFs, previene el efecto visual de "presionado" o "rollover" 
+        // cuando se usan colores de fondo personalizados.
+        btnIniciarSimulacion.setContentAreaFilled(true); 
+        btnIniciarSimulacion.setRolloverEnabled(false); 
+        // ---------------------------------------------------------
+        
         btnIniciarSimulacion.setMargin(new Insets(10, 20, 10, 20)); 
         
         panelBotonSur.add(btnIniciarSimulacion);
@@ -274,9 +301,10 @@ public class Menu extends javax.swing.JFrame {
         contentPane.add(panelBotonSur, BorderLayout.SOUTH);
         
         // --- 5. Añadir Action Listeners ---
-        // Usamos lambdas para acciones simples y referencias a métodos para las complejas
         radioCargarArchivo.addActionListener(e -> toggleInputSource(true));
-        radioGenerarNuevo.addActionListener(e -> toggleInputSource(false));
+        radioGenerarNuevo.addActionListener(e -> {
+            toggleInputSource(false);
+        });
         
         btnBuscarArchivo.addActionListener(this::btnBuscarArchivoActionPerformed);
         btnIniciarSimulacion.addActionListener(this::btnIniciarSimulacionActionPerformed);
@@ -286,18 +314,18 @@ public class Menu extends javax.swing.JFrame {
      * Configura los valores iniciales de los componentes.
      */
     private void setupInitialState() {
-        // Configurar los spinners con los valores del PDF
-        spinnerProcesos.setModel(new SpinnerListModel(new Integer[]{10, 50, 100}));
-        spinnerOperaciones.setModel(new SpinnerListModel(new Integer[]{500, 1000, 5000}));
+        // Usar SpinnerNumberModel para permitir cualquier valor
+        // (Valor Inicial, Mínimo, Máximo, Step)
+        spinnerProcesos.setModel(new SpinnerNumberModel(10, 1, 1000, 1));
+        spinnerOperaciones.setModel(new SpinnerNumberModel(500, 10, 100000, 10));
         
         // Estado inicial de la UI (Cargar por defecto)
         radioCargarArchivo.setSelected(true);
         toggleInputSource(true);
         
         // Ajustar tamaño de la ventana al contenido y centrar
-        // setMinimumSize(new Dimension(550, 480)); // Opcional: poner un mínimo
-        pack(); // Ajusta la ventana al tamaño de los componentes
-        setLocationRelativeTo(null); // Centrar en pantalla
+        pack(); 
+        setLocationRelativeTo(null); 
     }
 
     /**
@@ -316,12 +344,13 @@ public class Menu extends javax.swing.JFrame {
         lblOperaciones.setEnabled(!isFileMode);
         spinnerOperaciones.setEnabled(!isFileMode);
     }
-
-    // --- MÉTODOS DE EVENTOS (Sin cambios en la lógica) ---
+    
+    // --- MÉTODOS DE EVENTOS ---
     
     private void btnBuscarArchivoActionPerformed(java.awt.event.ActionEvent evt) {                                                 
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
+        fileChooser.setDialogTitle("Seleccionar Archivo de Instrucciones");
         int result = fileChooser.showOpenDialog(this);
         if (result == JFileChooser.APPROVE_OPTION) {
             File selectedFile = fileChooser.getSelectedFile();
@@ -329,7 +358,7 @@ public class Menu extends javax.swing.JFrame {
         }
     }                                                
 
-private void btnIniciarSimulacionActionPerformed(java.awt.event.ActionEvent evt) {                                                     
+    private void btnIniciarSimulacionActionPerformed(java.awt.event.ActionEvent evt) {                                                     
         // 1. Crear el Controlador
         Controller controller = new Controller();
 
@@ -339,10 +368,13 @@ private void btnIniciarSimulacionActionPerformed(java.awt.event.ActionEvent evt)
         try {
             semilla = Long.parseLong(txtSemilla.getText());
         } catch (NumberFormatException e) {
-            semilla = System.currentTimeMillis(); // Usar semilla aleatoria si es inválida
+            semilla = System.currentTimeMillis(); 
             txtSemilla.setText(String.valueOf(semilla));
         }
-
+        
+        // OBTENER VELOCIDAD
+        int velocidadInicialMs = sliderVelocidad.getValue();
+        
         // 3. Instanciar el algoritmo seleccionado
         PageReplacementAlgorithm algoritmo;
         switch (algNombre) {
@@ -357,36 +389,41 @@ private void btnIniciarSimulacionActionPerformed(java.awt.event.ActionEvent evt)
                 break;
             case "RND":
             default:
-                algoritmo = new RND(); // RND usa la semilla
+                algoritmo = new RND(); 
                 break;
         }
-
+        
         // 4. Configurar el controlador según la fuente de datos
-        if (radioCargarArchivo.isSelected()) {
-            String rutaArchivo = txtRutaArchivo.getText();
-            if (rutaArchivo.isEmpty()) {
-                javax.swing.JOptionPane.showMessageDialog(this, 
-                        "Por favor, seleccione un archivo de simulación.", 
-                        "Error", 
-                        javax.swing.JOptionPane.ERROR_MESSAGE);
-                return;
+        try {
+            if (radioCargarArchivo.isSelected()) {
+                String rutaArchivo = txtRutaArchivo.getText();
+                if (rutaArchivo.isEmpty()) {
+                    javax.swing.JOptionPane.showMessageDialog(this, 
+                            "Por favor, seleccione un archivo de simulaci\u00f3n.", 
+                            "Error", 
+                            javax.swing.JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                controller.setupSimulation(algoritmo, semilla, rutaArchivo, 0, 0);
+            } else {
+                // Generar nuevo
+                int P = (int) spinnerProcesos.getValue();
+                int N = (int) spinnerOperaciones.getValue();
+                controller.setupSimulation(algoritmo, semilla, null, P, N);
             }
-            controller.setupSimulation(algoritmo, semilla, rutaArchivo, 0, 0);
-        } else {
-            // Generar nuevo
-            int P = (int) spinnerProcesos.getValue();
-            int N = (int) spinnerOperaciones.getValue();
-            controller.setupSimulation(algoritmo, semilla, null, P, N);
-            
-            // TODO: Agregar lógica para "Descargar archivo generado"
+        } catch (Exception e) {
+             javax.swing.JOptionPane.showMessageDialog(this, 
+                    "Error al configurar la simulaci\u00f3n:\n" + e.getMessage(), 
+                    "Error Cr\u00edtico", 
+                    javax.swing.JOptionPane.ERROR_MESSAGE);
+             return;
         }
 
         // 5. Ocultar este menú y mostrar la ventana de simulación
-        this.setVisible(false); // Ocultar el menú
+        this.setVisible(false); 
         
-        // --- ¡LANZAR LA NUEVA VENTANA! ---
-        // Se le pasa 'this' (el menú actual) para que la simulación pueda volver
-        VentanaSimulacion ventanaSim = new VentanaSimulacion(this, controller);
+        // LANZAR LA NUEVA VENTANA, pasando la velocidad inicial
+        VentanaSimulacion ventanaSim = new VentanaSimulacion(this, controller, velocidadInicialMs);
         ventanaSim.setVisible(true);
     }                                                   
 
@@ -396,35 +433,15 @@ private void btnIniciarSimulacionActionPerformed(java.awt.event.ActionEvent evt)
     public static void main(String args[]) {
         /* Set the System look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* Intentamos establecer el Look and Feel del sistema operativo
-         * para que se vea más nativo y moderno que "Nimbus".
-         */
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (ReflectiveOperationException | javax.swing.UnsupportedLookAndFeelException ex) {
             logger.log(java.util.logging.Level.WARNING, "No se pudo establecer el System Look and Feel.", ex);
-            // Si falla, Java usará el Look and Feel "Metal" por defecto.
-            // También podríamos forzar "Nimbus" aquí si quisiéramos.
-            /*
-            try {
-                for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                    if ("Nimbus".equals(info.getName())) {
-                        javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                        break;
-                    }
-                }
-            } catch (Exception nimbusEx) {
-                 logger.log(java.util.logging.Level.SEVERE, "Tampoco se pudo cargar Nimbus.", nimbusEx);
-            }
-            */
         }
         //</editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(() -> new Menu().setVisible(true));
     }
-
-    // --- El bloque de Variables de NetBeans ya no es necesario ---
-    // ...
-    // End of variables declaration                   
+                  
 }

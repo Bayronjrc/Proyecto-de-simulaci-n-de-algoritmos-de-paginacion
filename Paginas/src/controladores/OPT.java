@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package controladores;
 
 import modelos.Instruction;
@@ -17,11 +13,9 @@ import java.util.HashMap;
  * - Requiere conocimiento completo de la secuencia  futura de instrcucciones
  * - Selecciona como víctima la página que será usada más tarde en el futuro
  * - Si una página nunca más será usada, se selecciona primerp
- * 
- * Este algoritmo es teóricamente óptimo pero imposible de implementar
+ * * Este algoritmo es teóricamente óptimo pero imposible de implementar
  * en un sistema real (requiere conocer el futuro).
- * 
- * Se usa como benchmark para comparar otros algoritmos
+ * * Se usa como benchmark para comparar otros algoritmos
  * @author wess y bayron
  */
 public class OPT implements PageReplacementAlgorithm{
@@ -73,8 +67,7 @@ public class OPT implements PageReplacementAlgorithm{
 
     /**
      * Establece el mapeo de ptr a páginas (para saber que páginas se van a usar).
-     * 
-     * @param map Mapa de ptr -> Lista de IDs de páginas
+     * * @param map Mapa de ptr -> Lista de IDs de páginas
      */
     public void setPtrToPageIdsMap(Map<Integer, List<Integer>> map) {
         this.ptrToPageIdsMap = map;

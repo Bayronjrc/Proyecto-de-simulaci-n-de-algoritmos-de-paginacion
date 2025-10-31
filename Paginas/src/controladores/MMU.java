@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author wess
@@ -88,7 +89,7 @@ public class MMU {
     /**
      * Ejecuta una instrucción 'new(pid, size)'.
      */
-    private long executeNew(New inst) {
+private long executeNew(New inst) {
         long timeElapsed = 0;
         int pid = inst.getPid();
         int size = inst.getSize();
@@ -136,10 +137,10 @@ public class MMU {
             // Asignar fragmentación interna (solo a la última página)
             if (i == pagesNeeded - 1) {
                 int bytesInLastPage = size % PAGE_SIZE_BYTES;
-                if (bytesInLastPage > 0 && bytesInLastPage != size) { // Asegurarse que size > 4096
+                if (bytesInLastPage > 0 && bytesInLastPage != size) {
                     int fragmentation = PAGE_SIZE_BYTES - bytesInLastPage;
                     newPage.setFragmentationInBytes(fragmentation);
-                } else if (size < PAGE_SIZE_BYTES) { // Caso especial: size < 4KB
+                } else if (size < PAGE_SIZE_BYTES) {
                      int fragmentation = PAGE_SIZE_BYTES - size;
                     newPage.setFragmentationInBytes(fragmentation);
                 }
@@ -151,6 +152,17 @@ public class MMU {
         currentProcess.registerPointer(newPtr); // Rastrear en el proceso
         
         inst.setPtrAsignado(newPtr); // Para logging
+
+        // --- INICIO DEL FIX: Registrar el mapeo de ptr a pageIds en OPT ---
+        if (algorithm instanceof OPT) {
+            // 1. Extraer solo los IDs de página
+            List<Integer> pageIds = newPages.stream()
+                                            .map(Page::getId)
+                                            .collect(Collectors.toList());
+            // 2. Registrar en la instancia del algoritmo OPT
+            ((OPT) algorithm).registerPtrToPages(newPtr, pageIds);
+        }
+        // --- FIN DEL FIX ---
 
         return timeElapsed;
     }
