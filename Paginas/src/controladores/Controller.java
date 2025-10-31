@@ -79,9 +79,6 @@ public class Controller {
         if (isFileMode) {
             // OPT necesita la lista pre-cargada para predecir el futuro
             optAlgorithm.setInstructionSequence(this.loadedInstructionSequence); 
-        } else {
-            // En modo Generar, OPT no puede predecir el futuro.
-            System.out.println("ADVERTENCIA: OPT no es 'óptimo' en modo 'Generar'.");
         }
         
         if (algorithm instanceof RND) {
