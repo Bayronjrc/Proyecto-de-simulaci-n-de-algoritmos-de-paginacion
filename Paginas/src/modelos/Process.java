@@ -43,6 +43,16 @@ public class Process {
     }
 
     /**
+     * Obtiene una lista de todos los punteros (ptrs) que este proceso posee actualmente.
+     * Para simplificar la función de Kill()
+     * @return Una lista de IDs de punteros.
+     */
+    public List<Integer> getOwnedPointers() {
+        // Devuelve una nueva lista de todas las llaves (ptrs) en el mapa
+        return new ArrayList<>(symbolTableMap.keySet());
+    }
+    
+    /**
      * Registra un puntero en la tabla de simbolos.
      */
     public void registerPointer(int ptr) {
