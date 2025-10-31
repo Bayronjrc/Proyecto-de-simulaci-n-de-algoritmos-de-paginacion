@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
 package vista;
 
 // --- Imports ---
@@ -11,27 +7,285 @@ import controladores.MRU;
 import controladores.PageReplacementAlgorithm;
 import controladores.RND;
 import controladores.SC;
+
 import java.io.File;
 import javax.swing.JFileChooser;
 import javax.swing.SpinnerListModel;
 
+// --- Imports de Swing para UI ---
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JSpinner;
+import javax.swing.JTextField;
+import javax.swing.UIManager;
+import javax.swing.border.Border;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.TitledBorder;
+
 /**
  *
- * @author wess
+ * @author wess (Revisado y mejorado por IA)
  */
 public class Menu extends javax.swing.JFrame {
 
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(Menu.class.getName());
 
+    // --- Variables de UI ---
+    // No es necesario que sean 'private', pero las mantenemos como en el original
+    JButton btnBuscarArchivo;
+    ButtonGroup btnGroupFuente;
+    JButton btnIniciarSimulacion;
+    JComboBox<String> comboAlgoritmo;
+    JLabel lblAlgoritmo;
+    JLabel lblOperaciones;
+    JLabel lblProcesos;
+    JLabel lblRutaArchivo;
+    JLabel lblSemilla;
+    JPanel panelFuente;
+    JPanel panelParametros;
+    JRadioButton radioCargarArchivo;
+    JRadioButton radioGenerarNuevo;
+    JSpinner spinnerOperaciones;
+    JSpinner spinnerProcesos;
+    JTextField txtRutaArchivo;
+    JTextField txtSemilla;
+
+    // --- Fuentes y Colores Personalizados ---
+    private final Font FONT_LABEL = new Font("SansSerif", Font.PLAIN, 14);
+    private final Font FONT_TITLE = new Font("SansSerif", Font.BOLD, 16);
+    private final Font FONT_BUTTON_BIG = new Font("SansSerif", Font.BOLD, 16);
+    private final Color COLOR_FONDO = new Color(245, 245, 245); // Un gris muy claro
+    private final Color COLOR_PANEL = new Color(255, 255, 255); // Blanco
+    private final Color COLOR_BOTON_PRIMARIO = new Color(0, 120, 215); // Azul
+    private final Color COLOR_TEXTO_BOTON = Color.WHITE;
+    private final Insets INSETS_CAMPO = new Insets(5, 5, 5, 5); // Espaciado para GridBag
+
     /**
      * Creates new form Menu
      */
     public Menu() {
-        initComponents();
-        // Configuración inicial
-        this.setTitle("Simulador de Paginación - Configuración");
-        this.setLocationRelativeTo(null); // Centrar en pantalla
+        // 1. Configuración básica de la ventana
+        super("Simulador de Paginación - Configuración");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         
+        // 2. Inicializar y construir la UI
+        initUIComponents();
+        
+        // 3. Configuración inicial de lógica
+        setupInitialState();
+    }
+    
+    /**
+     * Inicializa y organiza todos los componentes de Swing manualmente.
+     */
+    private void initUIComponents() {
+        // --- Panel Principal ---
+        // Usamos un JPanel como contentPane para poder ponerle un borde (padding)
+        JPanel contentPane = new JPanel(new BorderLayout(10, 10));
+        contentPane.setBorder(new EmptyBorder(15, 15, 15, 15)); // Padding general
+        contentPane.setBackground(COLOR_FONDO);
+        setContentPane(contentPane);
+
+        // --- Panel Central (para los dos paneles de configuración) ---
+        JPanel panelCentral = new JPanel(new BorderLayout(0, 10)); // Espacio vertical de 10px
+        panelCentral.setOpaque(false); // Transparente, usa el fondo del contentPane
+
+        // --- 1. Construcción del Panel de Fuente ---
+        panelFuente = new JPanel(new GridBagLayout());
+        panelFuente.setBackground(COLOR_PANEL);
+        // Borde con título y padding interno
+        TitledBorder tbFuente = BorderFactory.createTitledBorder("Fuente de Instrucciones");
+        tbFuente.setTitleFont(FONT_TITLE);
+        panelFuente.setBorder(BorderFactory.createCompoundBorder(tbFuente, new EmptyBorder(10, 10, 10, 10)));
+        
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = INSETS_CAMPO; // Espaciado
+
+        // Fila 0: Radio Cargar Archivo
+        radioCargarArchivo = new JRadioButton("Cargar desde Archivo");
+        radioCargarArchivo.setFont(FONT_LABEL);
+        radioCargarArchivo.setOpaque(false);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 3; // Ocupa 3 columnas
+        panelFuente.add(radioCargarArchivo, gbc);
+
+        // Fila 1: Componentes de Archivo
+        lblRutaArchivo = new JLabel("Ruta del Archivo:");
+        lblRutaArchivo.setFont(FONT_LABEL);
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 1; // Resetea
+        gbc.weightx = 0; // Etiqueta no se estira
+        panelFuente.add(lblRutaArchivo, gbc);
+
+        txtRutaArchivo = new JTextField();
+        txtRutaArchivo.setFont(FONT_LABEL);
+        txtRutaArchivo.setEditable(false);
+        txtRutaArchivo.setColumns(20); // Tamaño sugerido
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        gbc.weightx = 1.0; // Campo de texto se estira
+        panelFuente.add(txtRutaArchivo, gbc);
+
+        btnBuscarArchivo = new JButton("Buscar...");
+        btnBuscarArchivo.setFont(FONT_LABEL);
+        gbc.gridx = 2;
+        gbc.gridy = 1;
+        gbc.weightx = 0; // Botón no se estira
+        panelFuente.add(btnBuscarArchivo, gbc);
+
+        // Fila 2: Radio Generar Nuevo
+        radioGenerarNuevo = new JRadioButton("Generar Nueva Simulación");
+        radioGenerarNuevo.setFont(FONT_LABEL);
+        radioGenerarNuevo.setOpaque(false);
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.gridwidth = 3;
+        gbc.insets = new Insets(15, 5, 5, 5); // Más espacio arriba
+        panelFuente.add(radioGenerarNuevo, gbc);
+
+        gbc.insets = INSETS_CAMPO; // Resetea insets
+
+        // Fila 3: Generar Procesos
+        lblProcesos = new JLabel("Procesos (P):");
+        lblProcesos.setFont(FONT_LABEL);
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.gridwidth = 1;
+        gbc.weightx = 0;
+        panelFuente.add(lblProcesos, gbc);
+
+        spinnerProcesos = new JSpinner();
+        spinnerProcesos.setFont(FONT_LABEL);
+        // Hacemos el spinner más alto
+        spinnerProcesos.setPreferredSize(new Dimension(100, 30));
+        gbc.gridx = 1;
+        gbc.gridy = 3;
+        gbc.gridwidth = 2;
+        gbc.weightx = 1.0;
+        panelFuente.add(spinnerProcesos, gbc);
+        
+        // Fila 4: Generar Operaciones
+        lblOperaciones = new JLabel("Operaciones (N):");
+        lblOperaciones.setFont(FONT_LABEL);
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.gridwidth = 1;
+        gbc.weightx = 0;
+        panelFuente.add(lblOperaciones, gbc);
+        
+        spinnerOperaciones = new JSpinner();
+        spinnerOperaciones.setFont(FONT_LABEL);
+        spinnerOperaciones.setPreferredSize(new Dimension(100, 30));
+        gbc.gridx = 1;
+        gbc.gridy = 4;
+        gbc.gridwidth = 2;
+        gbc.weightx = 1.0;
+        panelFuente.add(spinnerOperaciones, gbc);
+
+        // Agrupar los radio buttons
+        btnGroupFuente = new ButtonGroup();
+        btnGroupFuente.add(radioCargarArchivo);
+        btnGroupFuente.add(radioGenerarNuevo);
+
+        // --- 2. Construcción del Panel de Parámetros ---
+        panelParametros = new JPanel(new GridBagLayout());
+        panelParametros.setBackground(COLOR_PANEL);
+        TitledBorder tbParams = BorderFactory.createTitledBorder("Parámetros de Simulación");
+        tbParams.setTitleFont(FONT_TITLE);
+        panelParametros.setBorder(BorderFactory.createCompoundBorder(tbParams, new EmptyBorder(10, 10, 10, 10)));
+        
+        gbc = new GridBagConstraints(); // Reiniciamos gbc por si acaso
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = INSETS_CAMPO;
+
+        // Fila 0: Algoritmo
+        lblAlgoritmo = new JLabel("Algoritmo a Simular:");
+        lblAlgoritmo.setFont(FONT_LABEL);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 0;
+        panelParametros.add(lblAlgoritmo, gbc);
+        
+        comboAlgoritmo = new JComboBox<>(new String[] { "FIFO", "SC", "MRU", "RND" });
+        comboAlgoritmo.setFont(FONT_LABEL);
+        comboAlgoritmo.setPreferredSize(new Dimension(100, 30)); // Más alto
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0;
+        panelParametros.add(comboAlgoritmo, gbc);
+
+        // Fila 1: Semilla
+        lblSemilla = new JLabel("Semilla (para RND y Generación):");
+        lblSemilla.setFont(FONT_LABEL);
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.weightx = 0;
+        panelParametros.add(lblSemilla, gbc);
+
+        txtSemilla = new JTextField("123456");
+        txtSemilla.setFont(FONT_LABEL);
+        txtSemilla.setPreferredSize(new Dimension(100, 30)); // Más alto
+        txtSemilla.setColumns(15);
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        gbc.weightx = 1.0;
+        panelParametros.add(txtSemilla, gbc);
+        
+        // --- 3. Construcción del Panel de Botón Inferior ---
+        JPanel panelBotonSur = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        panelBotonSur.setOpaque(false); // Transparente
+
+        btnIniciarSimulacion = new JButton("Iniciar Simulación");
+        btnIniciarSimulacion.setFont(FONT_BUTTON_BIG);
+        btnIniciarSimulacion.setBackground(COLOR_BOTON_PRIMARIO);
+        btnIniciarSimulacion.setForeground(COLOR_TEXTO_BOTON);
+        btnIniciarSimulacion.setOpaque(true); // Necesario en algunos LaF para que se vea el fondo
+        btnIniciarSimulacion.setBorderPainted(false); // Aspecto más plano
+        btnIniciarSimulacion.setFocusPainted(false);
+        // Padding interno del botón
+        btnIniciarSimulacion.setMargin(new Insets(10, 20, 10, 20)); 
+        
+        panelBotonSur.add(btnIniciarSimulacion);
+        
+        // --- 4. Ensamblar Paneles en la Ventana ---
+        panelCentral.add(panelFuente, BorderLayout.NORTH);
+        panelCentral.add(panelParametros, BorderLayout.CENTER);
+        
+        contentPane.add(panelCentral, BorderLayout.CENTER);
+        contentPane.add(panelBotonSur, BorderLayout.SOUTH);
+        
+        // --- 5. Añadir Action Listeners ---
+        // Usamos lambdas para acciones simples y referencias a métodos para las complejas
+        radioCargarArchivo.addActionListener(e -> toggleInputSource(true));
+        radioGenerarNuevo.addActionListener(e -> toggleInputSource(false));
+        
+        btnBuscarArchivo.addActionListener(this::btnBuscarArchivoActionPerformed);
+        btnIniciarSimulacion.addActionListener(this::btnIniciarSimulacionActionPerformed);
+    }
+    
+    /**
+     * Configura los valores iniciales de los componentes.
+     */
+    private void setupInitialState() {
         // Configurar los spinners con los valores del PDF
         spinnerProcesos.setModel(new SpinnerListModel(new Integer[]{10, 50, 100}));
         spinnerOperaciones.setModel(new SpinnerListModel(new Integer[]{500, 1000, 5000}));
@@ -39,8 +293,13 @@ public class Menu extends javax.swing.JFrame {
         // Estado inicial de la UI (Cargar por defecto)
         radioCargarArchivo.setSelected(true);
         toggleInputSource(true);
+        
+        // Ajustar tamaño de la ventana al contenido y centrar
+        // setMinimumSize(new Dimension(550, 480)); // Opcional: poner un mínimo
+        pack(); // Ajusta la ventana al tamaño de los componentes
+        setLocationRelativeTo(null); // Centrar en pantalla
     }
-    
+
     /**
      * Habilita/Deshabilita los paneles de entrada según la selección del radio button.
      * @param isFileMode true si "Cargar Archivo" está seleccionado, false si "Generar" lo está.
@@ -58,204 +317,8 @@ public class Menu extends javax.swing.JFrame {
         spinnerOperaciones.setEnabled(!isFileMode);
     }
 
-
-    /**
-     * This method is called from within the constructor to initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is always
-     * regenerated by the Form Editor.
-     */
-    @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">                          
-    private void initComponents() {
-
-        btnGroupFuente = new javax.swing.ButtonGroup();
-        panelFuente = new javax.swing.JPanel();
-        radioCargarArchivo = new javax.swing.JRadioButton();
-        lblRutaArchivo = new javax.swing.JLabel();
-        txtRutaArchivo = new javax.swing.JTextField();
-        btnBuscarArchivo = new javax.swing.JButton();
-        radioGenerarNuevo = new javax.swing.JRadioButton();
-        lblProcesos = new javax.swing.JLabel();
-        spinnerProcesos = new javax.swing.JSpinner();
-        lblOperaciones = new javax.swing.JLabel();
-        spinnerOperaciones = new javax.swing.JSpinner();
-        panelParametros = new javax.swing.JPanel();
-        lblAlgoritmo = new javax.swing.JLabel();
-        comboAlgoritmo = new javax.swing.JComboBox<>();
-        lblSemilla = new javax.swing.JLabel();
-        txtSemilla = new javax.swing.JTextField();
-        btnIniciarSimulacion = new javax.swing.JButton();
-
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-
-        panelFuente.setBorder(javax.swing.BorderFactory.createTitledBorder("Fuente de Instrucciones"));
-
-        btnGroupFuente.add(radioCargarArchivo);
-        radioCargarArchivo.setText("Cargar desde Archivo");
-        radioCargarArchivo.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                radioCargarArchivoActionPerformed(evt);
-            }
-        });
-
-        lblRutaArchivo.setText("Ruta del Archivo:");
-
-        txtRutaArchivo.setEditable(false);
-
-        btnBuscarArchivo.setText("Buscar...");
-        btnBuscarArchivo.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnBuscarArchivoActionPerformed(evt);
-            }
-        });
-
-        btnGroupFuente.add(radioGenerarNuevo);
-        radioGenerarNuevo.setText("Generar Nueva Simulación");
-        radioGenerarNuevo.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                radioGenerarNuevoActionPerformed(evt);
-            }
-        });
-
-        lblProcesos.setText("Procesos (P):");
-
-        lblOperaciones.setText("Operaciones (N):");
-
-        javax.swing.GroupLayout panelFuenteLayout = new javax.swing.GroupLayout(panelFuente);
-        panelFuente.setLayout(panelFuenteLayout);
-        panelFuenteLayout.setHorizontalGroup(
-            panelFuenteLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelFuenteLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(panelFuenteLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(panelFuenteLayout.createSequentialGroup()
-                        .addGap(21, 21, 21)
-                        .addGroup(panelFuenteLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(lblProcesos)
-                            .addComponent(lblOperaciones))
-                        .addGap(18, 18, 18)
-                        .addGroup(panelFuenteLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(spinnerProcesos)
-                            .addComponent(spinnerOperaciones)))
-                    .addGroup(panelFuenteLayout.createSequentialGroup()
-                        .addGroup(panelFuenteLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(radioCargarArchivo)
-                            .addComponent(radioGenerarNuevo))
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addGroup(panelFuenteLayout.createSequentialGroup()
-                        .addGap(21, 21, 21)
-                        .addComponent(lblRutaArchivo)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtRutaArchivo)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnBuscarArchivo)))
-                .addContainerGap())
-        );
-        panelFuenteLayout.setVerticalGroup(
-            panelFuenteLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelFuenteLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(radioCargarArchivo)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(panelFuenteLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lblRutaArchivo)
-                    .addComponent(txtRutaArchivo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnBuscarArchivo))
-                .addGap(18, 18, 18)
-                .addComponent(radioGenerarNuevo)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(panelFuenteLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lblProcesos)
-                    .addComponent(spinnerProcesos, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(panelFuenteLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lblOperaciones)
-                    .addComponent(spinnerOperaciones, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
-
-        panelParametros.setBorder(javax.swing.BorderFactory.createTitledBorder("Parámetros de Simulación"));
-
-        lblAlgoritmo.setText("Algoritmo a Simular:");
-
-        comboAlgoritmo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "FIFO", "SC", "MRU", "RND" }));
-
-        lblSemilla.setText("Semilla (para RND y Generación):");
-
-        txtSemilla.setText("123456");
-
-        javax.swing.GroupLayout panelParametrosLayout = new javax.swing.GroupLayout(panelParametros);
-        panelParametros.setLayout(panelParametrosLayout);
-        panelParametrosLayout.setHorizontalGroup(
-            panelParametrosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelParametrosLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(panelParametrosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(lblAlgoritmo)
-                    .addComponent(lblSemilla))
-                .addGap(18, 18, 18)
-                .addGroup(panelParametrosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(comboAlgoritmo, 0, 266, Short.MAX_VALUE)
-                    .addComponent(txtSemilla))
-                .addContainerGap())
-        );
-        panelParametrosLayout.setVerticalGroup(
-            panelParametrosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelParametrosLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(panelParametrosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lblAlgoritmo)
-                    .addComponent(comboAlgoritmo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(panelParametrosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lblSemilla)
-                    .addComponent(txtSemilla, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
-
-        btnIniciarSimulacion.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        btnIniciarSimulacion.setText("Iniciar Simulación");
-        btnIniciarSimulacion.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnIniciarSimulacionActionPerformed(evt);
-            }
-        });
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(panelFuente, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(panelParametros, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(btnIniciarSimulacion, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(panelFuente, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(panelParametros, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(btnIniciarSimulacion, javax.swing.GroupLayout.DEFAULT_SIZE, 40, Short.MAX_VALUE)
-                .addContainerGap())
-        );
-
-        pack();
-    }// </editor-fold>                        
-
-    private void radioCargarArchivoActionPerformed(java.awt.event.ActionEvent evt) {                                                   
-        toggleInputSource(true);
-    }                                                  
-
-    private void radioGenerarNuevoActionPerformed(java.awt.event.ActionEvent evt) {                                                  
-        toggleInputSource(false);
-    }                                                 
-
+    // --- MÉTODOS DE EVENTOS (Sin cambios en la lógica) ---
+    
     private void btnBuscarArchivoActionPerformed(java.awt.event.ActionEvent evt) {                                                 
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
@@ -266,7 +329,7 @@ public class Menu extends javax.swing.JFrame {
         }
     }                                                
 
-    private void btnIniciarSimulacionActionPerformed(java.awt.event.ActionEvent evt) {                                                     
+private void btnIniciarSimulacionActionPerformed(java.awt.event.ActionEvent evt) {                                                     
         // 1. Crear el Controlador
         Controller controller = new Controller();
 
@@ -315,41 +378,45 @@ public class Menu extends javax.swing.JFrame {
             int N = (int) spinnerOperaciones.getValue();
             controller.setupSimulation(algoritmo, semilla, null, P, N);
             
-            // TODO: Agregar lógica para "Descargar archivo generado" [cite: 60]
+            // TODO: Agregar lógica para "Descargar archivo generado"
         }
 
         // 5. Ocultar este menú y mostrar la ventana de simulación
-        this.setVisible(false);
+        this.setVisible(false); // Ocultar el menú
         
-        // TODO: Crear y mostrar la ventana de simulación principal
-        // Ejemplo: new VentanaSimulacion(controller).setVisible(true);
-        // Por ahora, solo iniciamos la simulación en consola para probar
-        System.out.println("Simulación configurada. Iniciando...");
-        
-        // (En el proyecto real, la VentanaSimulacion llamaría a resumeSimulation)
-        // (Aquí solo probamos que el setup funciona)
-        
-        // this.dispose(); // Cerrar esta ventana
-    }                                                    
+        // --- ¡LANZAR LA NUEVA VENTANA! ---
+        // Se le pasa 'this' (el menú actual) para que la simulación pueda volver
+        VentanaSimulacion ventanaSim = new VentanaSimulacion(this, controller);
+        ventanaSim.setVisible(true);
+    }                                                   
 
     /**
      * @param args the command line arguments
      */
     public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
+        /* Set the System look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+        /* Intentamos establecer el Look and Feel del sistema operativo
+         * para que se vea más nativo y moderno que "Nimbus".
          */
         try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (ReflectiveOperationException | javax.swing.UnsupportedLookAndFeelException ex) {
-            logger.log(java.util.logging.Level.SEVERE, null, ex);
+            logger.log(java.util.logging.Level.WARNING, "No se pudo establecer el System Look and Feel.", ex);
+            // Si falla, Java usará el Look and Feel "Metal" por defecto.
+            // También podríamos forzar "Nimbus" aquí si quisiéramos.
+            /*
+            try {
+                for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                    if ("Nimbus".equals(info.getName())) {
+                        javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                        break;
+                    }
+                }
+            } catch (Exception nimbusEx) {
+                 logger.log(java.util.logging.Level.SEVERE, "Tampoco se pudo cargar Nimbus.", nimbusEx);
+            }
+            */
         }
         //</editor-fold>
 
@@ -357,23 +424,7 @@ public class Menu extends javax.swing.JFrame {
         java.awt.EventQueue.invokeLater(() -> new Menu().setVisible(true));
     }
 
-    // Variables declaration - do not modify                     
-    private javax.swing.JButton btnBuscarArchivo;
-    private javax.swing.ButtonGroup btnGroupFuente;
-    private javax.swing.JButton btnIniciarSimulacion;
-    private javax.swing.JComboBox<String> comboAlgoritmo;
-    private javax.swing.JLabel lblAlgoritmo;
-    private javax.swing.JLabel lblOperaciones;
-    private javax.swing.JLabel lblProcesos;
-    private javax.swing.JLabel lblRutaArchivo;
-    private javax.swing.JLabel lblSemilla;
-    private javax.swing.JPanel panelFuente;
-    private javax.swing.JPanel panelParametros;
-    private javax.swing.JRadioButton radioCargarArchivo;
-    private javax.swing.JRadioButton radioGenerarNuevo;
-    private javax.swing.JSpinner spinnerOperaciones;
-    private javax.swing.JSpinner spinnerProcesos;
-    private javax.swing.JTextField txtRutaArchivo;
-    private javax.swing.JTextField txtSemilla;
+    // --- El bloque de Variables de NetBeans ya no es necesario ---
+    // ...
     // End of variables declaration                   
 }

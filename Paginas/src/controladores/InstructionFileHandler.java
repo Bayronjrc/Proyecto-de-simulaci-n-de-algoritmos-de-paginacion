@@ -1,7 +1,7 @@
 package controladores;
 
 import modelos.*;
-import modelos.Process;
+import modelos.Process; // Importar su clase
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -9,30 +9,27 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
 /**
- *
- * @author wess
- * Parser del sistema para archivos.
- * 
+ * Maneja la carga, generación y guardado de archivos de instrucciones.
+ * GENERADOR ROBUSTO: Ahora genera secuencias lógicamente correctas por proceso.
  */
 public class InstructionFileHandler {
 
     // Contadores para el parser/generador
     private int nextPtrId;
-    private Map<Integer, Integer> ordinalToPtrIdMap; // Mapa: 1er ptr -> ptrID 1, 2do ptr -> ptrID 2
+    private Map<Integer, Integer> ordinalToPtrIdMap; // Mapa: 1er ptr -> ptrID 1
     private Map<Integer, Integer> ptrIdToPidMap;     // Mapa: ptrID -> PID
     private Map<Integer, Process> processMap;        // Mapa: PID -> Objeto Process
 
     public InstructionFileHandler() {
         resetParserState();
     }
-
+    
     private void resetParserState() {
         this.nextPtrId = 1;
         this.ordinalToPtrIdMap = new HashMap<>();
@@ -48,19 +45,17 @@ public class InstructionFileHandler {
      */
     public SimulationData loadInstructionsFromFile(String filePath) throws IOException {
         resetParserState();
-        List<Instruction> instructions = new ArrayList<>();
+        List<Instruction> instructions = new ArrayList<>(); // Esta es la lista intercalada
         
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 line = line.trim();
                 
-                // Ignorar líneas vacías o comentarios (como $use(1)$ del Anexo)
                 if (line.isEmpty() || line.startsWith("#") || line.startsWith("$")) {
                     continue;
                 }
                 
-                // Ignorar los números de línea del Anexo 1 (ej. "1 new(1,500)")
                 if (line.matches("^\\d+\\s+.*") || line.matches("^\\d+\\.\\s+.*")) {
                     line = line.substring(line.indexOf(' ')).trim();
                 }
@@ -72,9 +67,10 @@ public class InstructionFileHandler {
             }
         }
         
+        // El parser ya añade las instrucciones a los procesos
         return new SimulationData(instructions, new ArrayList<>(processMap.values()));
     }
-
+    
     /**
      * Parsea una sola línea de instrucción y actualiza los mapas.
      */
@@ -97,15 +93,17 @@ public class InstructionFileHandler {
                     ordinalToPtrIdMap.put(currentOrdinal, nextPtrId); // Mapea 1 -> ptrId 1
                     ptrIdToPidMap.put(nextPtrId, pid);                // Mapea ptrId 1 -> pid 1
                     
-                    // Añadir ptr al proceso (o crear el proceso si no existe)
                     processMap.putIfAbsent(pid, new Process(pid));
-                    // (El puntero real se registrará en el Proceso durante la ejecución de la MMU)
                     
                     nextPtrId++;
                     break;
 
                 case "use":
                     int ordinalUse = Integer.parseInt(args[0].trim());
+                    // Manejar error si el puntero ordinal no existe
+                    if (!ordinalToPtrIdMap.containsKey(ordinalUse)) {
+                        throw new IllegalArgumentException("Error de Parseo: Puntero ordinal " + ordinalUse + " no existe.");
+                    }
                     int ptrIdUse = ordinalToPtrIdMap.get(ordinalUse);
                     pid = ptrIdToPidMap.get(ptrIdUse);
                     inst = new Use(pid, ptrIdUse);
@@ -113,6 +111,9 @@ public class InstructionFileHandler {
 
                 case "delete":
                     int ordinalDel = Integer.parseInt(args[0].trim());
+                    if (!ordinalToPtrIdMap.containsKey(ordinalDel)) {
+                        throw new IllegalArgumentException("Error de Parseo: Puntero ordinal " + ordinalDel + " no existe.");
+                    }
                     int ptrIdDel = ordinalToPtrIdMap.get(ordinalDel);
                     pid = ptrIdToPidMap.get(ptrIdDel);
                     inst = new Delete(pid, ptrIdDel);
@@ -140,13 +141,11 @@ public class InstructionFileHandler {
             return null;
         }
     }
-    
+
+
     /**
-     * Genera una nueva lista de procesos e instrucciones.
-     * @param P Número de procesos (10, 50, 100)
-     * @param N Número total de operaciones (500, 1000, 5000)
-     * @param seed Semilla para el Random
-     * @return Un objeto SimulationData que contiene la lista de instrucciones y procesos.
+     * Genera una nueva lista de procesos e instrucciones (LÓGICA ROBUSTA).
+     * Ya no crea una lista intercalada, solo añade instrucciones lógicas a cada proceso.
      */
     public SimulationData generateProcesses(int P, int N, long seed) {
         resetParserState();
@@ -160,8 +159,9 @@ public class InstructionFileHandler {
             processMap.put(i, p);
         }
         
-        List<Instruction> allInstructions = new ArrayList<>();
-        Map<Integer, List<Integer>> processPtrs = new HashMap<>(); // pid -> lista de ptrs ordinales
+        // Mapa para rastrear los punteros ORDINALES VÁLIDOS por proceso
+        // Esto simula la "tabla de símbolos" de cada proceso
+        Map<Integer, List<Integer>> processPtrs = new HashMap<>();
         for (int i = 1; i <= P; i++) {
             processPtrs.put(i, new ArrayList<>());
         }
@@ -172,7 +172,6 @@ public class InstructionFileHandler {
             Process p = processes.get(rand.nextInt(P));
             int pid = p.getPid();
             
-            // Decidir qué instrucción generar
             int instructionType = rand.nextInt(10); // 0-3=new, 4-7=use, 8-9=delete
             
             // Regla: 'use' o 'delete' solo si el proceso tiene punteros
@@ -189,10 +188,13 @@ public class InstructionFileHandler {
                     int size = (rand.nextInt(10) + 1) * 512; // Tamaños de 512B a 5120B
                     inst = new New(pid, size);
                     
+                    // --- Lógica de "parser inteligente" para generación ---
                     int currentOrdinal = ordinalToPtrIdMap.size() + 1;
                     ordinalToPtrIdMap.put(currentOrdinal, nextPtrId);
                     ptrIdToPidMap.put(nextPtrId, pid);
-                    processPtrs.get(pid).add(currentOrdinal); // Rastrear el puntero ordinal
+                    
+                    // Añadir el *ptrID real* a la lista de punteros del proceso
+                    processPtrs.get(pid).add(nextPtrId); // Rastrear el puntero real
                     
                     nextPtrId++;
                     break;
@@ -201,46 +203,49 @@ public class InstructionFileHandler {
                 case 5:
                 case 6:
                 case 7:
-                    int ptrOrdinalToUse = processPtrs.get(pid).get(rand.nextInt(processPtrs.get(pid).size()));
-                    int ptrIdUse = ordinalToPtrIdMap.get(ptrOrdinalToUse);
-                    inst = new Use(pid, ptrIdUse);
+                    // Elegir un ptrID aleatorio de la lista de punteros válidos de este proceso
+                    int ptrIdToUse = processPtrs.get(pid).get(rand.nextInt(processPtrs.get(pid).size()));
+                    inst = new Use(pid, ptrIdToUse);
                     break;
 
                 case 8: // delete
                 case 9:
+                    // Elegir y *eliminar* un ptrID de la lista de punteros válidos
                     int listIndex = rand.nextInt(processPtrs.get(pid).size());
-                    int ptrOrdinalToDel = processPtrs.get(pid).remove(listIndex); // Quitar de la lista de ptrs
-                    int ptrIdDel = ordinalToPtrIdMap.get(ptrOrdinalToDel);
-                    inst = new Delete(pid, ptrIdDel);
+                    int ptrIdToDel = processPtrs.get(pid).remove(listIndex); // Quitar de la lista
+                    inst = new Delete(pid, ptrIdToDel);
                     break;
             }
+            
             if (inst != null) {
-                allInstructions.add(inst);
-                p.addInstruction(inst);
+                p.addInstruction(inst); // Añadir al proceso
             }
         }
 
-        // 3. Añadir 'kill' al final para cada proceso
+        // 3. Añadir 'kill' al final de la lista de cada proceso
         for (Process p : processes) {
             Instruction killInst = new Kill(p.getPid());
-            allInstructions.add(killInst);
-            p.addInstruction(killInst);
+            p.addInstruction(killInst); 
         }
 
-        // 4. Intercalar la lista final
-        Collections.shuffle(allInstructions, rand);
-        
-        return new SimulationData(allInstructions, processes);
+        // 4. NO devolver una lista intercalada. Devolver solo los procesos.
+        // El Controller se encargará de intercalar en tiempo de ejecución.
+        return new SimulationData(null, processes);
     }
-
+    
     /**
-     * Guarda una lista de instrucciones en un archivo, usando el formato ordinal del Anexo 1.
-     * @param instructions Lista de instrucciones.
-     * @param filePath Ruta para guardar.
-     * @throws IOException
+     * Guarda una lista de instrucciones en un archivo.
+     * (NOTA: Esta implementación es compleja y puede necesitar ajustes
+     * para recrear el formato ordinal 1-a-1).
      */
     public void saveInstructionsToFile(List<Instruction> instructions, String filePath) throws IOException {
-        // Mapa inverso para 'save': ptrID -> ordinal
+        
+        // (Esta lógica es para MODO CARGA, no MODO GENERADO)
+        // Para guardar el modo generado, tendríamos que re-intercalar
+        
+        System.out.println("Guardando " + instructions.size() + " instrucciones en " + filePath);
+        
+        // Reconstruir mapa de ptrID -> ordinal
         Map<Integer, Integer> ptrIdToOrdinalMap = new HashMap<>();
         int ordinalCounter = 1;
 
@@ -249,24 +254,26 @@ public class InstructionFileHandler {
                 String line = "";
                 if (inst instanceof New) {
                     New n = (New) inst;
-                    // Asumiendo que el 'ptrAsignado' se estableció durante la EJECUCIÓN
-                    // Es mejor reconstruir el mapa aquí
+                    // Asumir que el 'ptrAsignado' fue seteado por la MMU
+                    int ptrId = n.getPtrAsignado() != null ? n.getPtrAsignado() : -1;
                     
-                    int ptrId = -1; // Se necesita una forma de obtener el ptrId de New
-                    // Esta lógica es compleja. Simplificaremos:
-                    
-                    line = String.format("new(%d,%d)", inst.getPid(), ((New) inst).getSize());
+                    if (ptrId != -1 && !ptrIdToOrdinalMap.containsKey(ptrId)) {
+                        ptrIdToOrdinalMap.put(ptrId, ordinalCounter++);
+                    }
+                    line = String.format("new(%d,%d)", inst.getPid(), n.getSize());
                     
                 } else if (inst instanceof Use) {
-                    // Esta es la parte difícil: necesitamos el 'ordinal' de este ptrId
-                    // Esta implementación de 'save' es un desafío.
-                    // La forma más simple es usar el toFileFormat() del parser:
-                    line = inst.toFileFormat(); // Esto usará el formato del parser
+                    int ptrId = ((Use) inst).getPtr();
+                    int ordinal = ptrIdToOrdinalMap.getOrDefault(ptrId, -1);
+                    line = String.format("use(%d)", ordinal);
                     
                 } else if (inst instanceof Delete) {
-                    line = inst.toFileFormat();
+                    int ptrId = ((Delete) inst).getPtr();
+                    int ordinal = ptrIdToOrdinalMap.getOrDefault(ptrId, -1);
+                    line = String.format("delete(%d)", ordinal);
+                    
                 } else if (inst instanceof Kill) {
-                    line = inst.toFileFormat();
+                    line = String.format("kill(%d)", inst.getPid());
                 }
                 
                 writer.write(line);
@@ -275,12 +282,13 @@ public class InstructionFileHandler {
         }
     }
 
+
     /**
      * Clase interna para devolver múltiples valores desde el handler.
      */
     public static class SimulationData {
-        public final List<Instruction> instructions;
-        public final List<Process> processes;
+        public final List<Instruction> instructions; // Usado para 'load' (lista intercalada)
+        public final List<Process> processes;      // Usado para 'generate' (procesos con listas ordenadas)
         
         public SimulationData(List<Instruction> instructions, List<Process> processes) {
             this.instructions = instructions;
