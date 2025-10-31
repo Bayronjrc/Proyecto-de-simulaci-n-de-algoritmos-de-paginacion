@@ -1,20 +1,17 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
 package vista;
 
 import controladores.Controller;
-import controladores.FIFO; // Para el main de prueba
+import controladores.FIFO; 
 import controladores.MMU;
 import java.awt.Color;
 import java.util.List;
+import java.util.stream.Collectors; 
 import javax.swing.Timer;
 import modelos.Page;
 
 /**
  * Ventana principal que muestra la simulación en tiempo real.
- * CORREGIDA: Esta clase ahora es la única dueña del Timer.
+ * CORREGIDA: Esta clase ahora es la única dueña del Timer y recibe la velocidad inicial.
  *
  * @author wess
  */
@@ -32,8 +29,9 @@ public class VentanaSimulacion extends javax.swing.JFrame {
      * Creates new form VentanaSimulacion
      * @param menu La ventana de Menú original, para poder volver a ella.
      * @param controller El controlador ya configurado desde el Menú.
+     * @param initialDelay La velocidad inicial del timer (en ms) seleccionada en el menú.
      */
-    public VentanaSimulacion(Menu menu, Controller controller) {
+    public VentanaSimulacion(Menu menu, Controller controller, int initialDelay) {
         this.controller = controller;
         this.menuPrincipal = menu; // Guardar la referencia al menú
         
@@ -43,7 +41,6 @@ public class VentanaSimulacion extends javax.swing.JFrame {
         this.setLocationRelativeTo(null); 
         
         // --- IMPORTANTE: Al cerrar esta ventana, NO cerrar toda la app ---
-        // Se maneja en el botón "Volver al Menú"
         this.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE); 
         this.addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
@@ -55,17 +52,17 @@ public class VentanaSimulacion extends javax.swing.JFrame {
             }
         });
 
-
         String algNombre = controller.getMmuUser().getAlgorithm().getAlgorithmName();
         panelUsuario.setBorder(javax.swing.BorderFactory.createTitledBorder(
                 "Algoritmo Seleccionado: " + algNombre));
 
-        // Configurar el Timer que manejará el bucle de simulación
-        int velocidadMs = sliderVelocidad.getValue();
+        // --- FIX DE NULLPOINTEREXCEPTION ---
+        // 1. Inicializar el Timer primero.
+        simulationTimer = new Timer(initialDelay, e -> runStep());
         
-        // --- CORRECCIÓN DEL TYPO ---
-        // 'velocMs' ha sido renombrado a 'velocidadMs'
-        simulationTimer = new Timer(velocidadMs, e -> runStep());
+        // 2. Establecer el valor del slider (esto dispara el evento, pero el timer ya existe).
+        sliderVelocidad.setValue(initialDelay); // Refleja la velocidad seleccionada en el menú
+        // --- FIN DEL FIX ---
         
         // Ocultar el botón de volver
         btnVolverMenu.setEnabled(false);
@@ -153,7 +150,7 @@ public class VentanaSimulacion extends javax.swing.JFrame {
         if (thrashingPct > 50.0) {
             thrashing.setForeground(Color.RED);
         } else {
-            thrashing.setForeground(Color.BLACK); // O el color por defecto de la GUI
+            thrashing.setForeground(Color.BLACK); 
         }
     }
     
@@ -263,12 +260,13 @@ public class VentanaSimulacion extends javax.swing.JFrame {
 
         lblVelocidad.setText("Velocidad:");
 
-        sliderVelocidad.setMajorTickSpacing(1000);
+        // --- LÍMITES DE VELOCIDAD MODIFICADOS ---
+        sliderVelocidad.setMajorTickSpacing(250);
         sliderVelocidad.setMaximum(2000);
-        sliderVelocidad.setMinimum(50);
-        sliderVelocidad.setMinorTickSpacing(250);
+        sliderVelocidad.setMinimum(12); // Mínimo de 12ms
+        sliderVelocidad.setMinorTickSpacing(13); // Paso mínimo
         sliderVelocidad.setPaintTicks(true);
-        sliderVelocidad.setToolTipText("Tiempo en ms por paso");
+        sliderVelocidad.setToolTipText("Tiempo en ms por paso (Mín: 12ms)"); // Tooltip actualizado
         sliderVelocidad.setValue(200);
         sliderVelocidad.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
@@ -290,12 +288,14 @@ public class VentanaSimulacion extends javax.swing.JFrame {
             .addGroup(panelControlesLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(btnPlayPause, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                // --- POSICIÓN DEL BOTÓN REGRESAR ---
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(btnVolverMenu)
+                // --- FIN POSICIÓN ---
                 .addGap(18, 18, 18)
                 .addComponent(lblVelocidad)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(sliderVelocidad, javax.swing.GroupLayout.DEFAULT_SIZE, 509, Short.MAX_VALUE)
-                .addGap(18, 18, 18)
-                .addComponent(btnVolverMenu)
                 .addContainerGap())
         );
         panelControlesLayout.setVerticalGroup(
@@ -304,12 +304,14 @@ public class VentanaSimulacion extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(panelControlesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(btnPlayPause, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    // --- POSICIÓN DEL BOTÓN REGRESAR ---
+                    .addComponent(btnVolverMenu, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    // --- FIN POSICIÓN ---
                     .addGroup(panelControlesLayout.createSequentialGroup()
                         .addGroup(panelControlesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(lblVelocidad)
                             .addComponent(sliderVelocidad, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addComponent(btnVolverMenu, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
 
@@ -470,6 +472,7 @@ public class VentanaSimulacion extends javax.swing.JFrame {
 
     private void sliderVelocidadStateChanged(javax.swing.event.ChangeEvent evt) {                                             
         int newDelay = sliderVelocidad.getValue();
+        // ESTA LÍNEA YA NO DEBE CAUSAR EXCEPCIÓN.
         simulationTimer.setDelay(newDelay);
     }                                            
 
@@ -501,12 +504,11 @@ public class VentanaSimulacion extends javax.swing.JFrame {
         } catch (ReflectiveOperationException | javax.swing.UnsupportedLookAndFeelException ex) {
             logger.log(java.util.logging.Level.SEVERE, null, ex);
         }
-        //</or-fold>
+        //</editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(() -> {
             // --- CÓDIGO DE PRUEBA ---
-            // Este main() es solo para probar esta ventana aisladamente.
             // Necesita un Menú "falso" para volver.
             Menu fakeMenu = new Menu();
             
@@ -514,7 +516,8 @@ public class VentanaSimulacion extends javax.swing.JFrame {
             // Prueba en modo "Generar" (filePath = null)
             testController.setupSimulation(new FIFO(), 123L, null, 10, 500);
             
-            new VentanaSimulacion(fakeMenu, testController).setVisible(true);
+            // Llamada al constructor AHORA requiere la velocidad inicial (200ms por defecto)
+            new VentanaSimulacion(fakeMenu, testController, 200).setVisible(true);
         });
     }
 
